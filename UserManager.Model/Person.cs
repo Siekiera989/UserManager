@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Xml;
 using System.Xml.Serialization;
 
 namespace UserManager.Model
 {
+    [XmlRoot(nameof(Person))]
     public class Person
     {
+        public short ID { get; set; }
         [XmlElement(nameof(FirstName))]
         public string FirstName { get; set; }
         [XmlElement(nameof(LastName))]
