@@ -94,5 +94,15 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\UserManager.Infrastructure\UserManager.Infrastructure.csproj">
+      <Project>{7bf7dbdd-44b6-4a08-94a5-290fdeb55f34}</Project>
+      <Name>UserManager.Infrastructure</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\UserManager.Model\UserManager.Model.csproj">
+      <Project>{c6659a9c-12ff-4a1e-ba10-ff99dce5c7db}</Project>
+      <Name>UserManager.Model</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
