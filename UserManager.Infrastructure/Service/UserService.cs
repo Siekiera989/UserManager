@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 using UserManager.Infrastructure.Interface;
@@ -13,14 +12,18 @@ namespace UserManager.Infrastructure.Service
 {
     public class UserService : IUserService
     {
-        private static readonly string _mainPath = Path.Combine(Directory.GetParent(Process.GetCurrentProcess().MainModule?.FileName).ToString(), "UserProfiles");
+        private static readonly string MainPath = Path.Combine(Directory.GetParent(Process.GetCurrentProcess().MainModule?.FileName).ToString(), "UserProfiles");
         public ObservableCollection<Person> ReadFromFile()
         {
             var personList = new ObservableCollection<Person>();
 
-            if (!Directory.Exists(_mainPath)) return personList;
+            if (!Directory.Exists(MainPath))
+            {
+                Directory.CreateDirectory(MainPath);
+                return null;
+            }
 
-            var files = Directory.GetFiles(_mainPath, "*.xml", SearchOption.TopDirectoryOnly);
+            var files = Directory.GetFiles(MainPath, "*.xml", SearchOption.TopDirectoryOnly);
 
             foreach (var file in files)
                 personList.Add(GetPerson(file));
@@ -40,39 +43,64 @@ namespace UserManager.Infrastructure.Service
             using (TextReader text = new StringReader(documentXml.OuterXml))
                 person = (Person)serializer.Deserialize(text);
 
-            var lastId = fileName.Substring(_mainPath.Length+1).Substring(0,fileName.Substring(_mainPath.Length+1).Length-4);
+            var lastId = fileName.Substring(MainPath.Length+1).Substring(0,fileName.Substring(MainPath.Length+1).Length-4);
             person.ID = Convert.ToInt16(lastId);
-            person.SetAge();
             return person;
             
         }
 
-        public void CreateNewPerson(Person person, bool deleteExisting)
+        public short CreateNewPerson(Person person)
         {
-            var xmlSerializer = new XmlSerializer(typeof(Person));
+            try
+            {
+                var xmlSerializer = new XmlSerializer(typeof(Person));
 
-            var fileCount = Directory.GetFiles(_mainPath, "*.xml", SearchOption.TopDirectoryOnly).Length + 1;
+                using (var sw = new StreamWriter($"{MainPath}//{GetNewId()+1}.xml"))
+                   xmlSerializer.Serialize(sw, person);
 
-            if (deleteExisting)
+                return GetNewId();
+            }
+            catch (Exception)
+            {
+                return 0;
+            }
+        }
+
+        public bool DeleteExistingPerson(Person person)
+        {
+            var file = Path.Combine(MainPath, $"{person.ID}.xml");
+            if (!File.Exists(file)) return false;
+
+            File.Delete(file);
+            return true;
+        }
+
+        public bool SaveChanges(List<Person> persons)
+        {
+            foreach (var person in persons)
             {
                 DeleteExistingPerson(person);
-                using (var sw = new StreamWriter($"{_mainPath}//{person.ID}.xml"))
-                    xmlSerializer.Serialize(sw, person);
+                var xmlSerializer=new XmlSerializer(typeof(Person));
+                if (person.ID == 0)
+                    CreateNewPerson(person);
+                else
+                {
+                    using (var sw = new StreamWriter($"{MainPath}//{person.ID}.xml"))
+                        xmlSerializer.Serialize(sw, person);
+                }
+                
             }
-            else
-            {
-                using (var sw = new StreamWriter($"{_mainPath}//{fileCount}.xml"))
-                    xmlSerializer.Serialize(sw, person);
-            }
+            return true;
         }
 
-        public void DeleteExistingPerson(Person person)
+        private short GetNewId()
         {
-            var file = Directory.GetFiles(_mainPath, $"{person.ID}.xml", SearchOption.TopDirectoryOnly).ToString();
-            if (File.Exists(file))
-                File.Delete(file);
-        }
+            var files = Directory.GetFiles(MainPath, "*.xml", SearchOption.TopDirectoryOnly);
+            if (files.Length <= 0) return 0;
+            var lastFile = files[files.Length - 1];
+            var lastId=lastFile.Substring(MainPath.Length+1).Substring(0,lastFile.Substring(MainPath.Length+1).Length-4);
+            return Convert.ToInt16(lastId);
 
-        public void SaveChanges(Person person) => CreateNewPerson(person, true);
+        }
     }
 }

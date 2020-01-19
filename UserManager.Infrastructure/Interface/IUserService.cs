@@ -7,8 +7,8 @@ namespace UserManager.Infrastructure.Interface
     public interface IUserService
     {
         ObservableCollection<Person> ReadFromFile();
-        void CreateNewPerson(Person person, bool deleteExisting);
-        void DeleteExistingPerson(Person person);
-        void SaveChanges(Person person);
+        short CreateNewPerson(Person person);
+        bool DeleteExistingPerson(Person person);
+        bool SaveChanges(List<Person> person);
     }
 }

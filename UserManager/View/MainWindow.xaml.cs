@@ -1,30 +1,38 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using UserManager.Model;
 using UserManager.ViewModel;
 
-namespace UserManager
+namespace UserManager.View
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
 
         public MainWindow()
         {
             InitializeComponent();
+        }
+
+        private void DataGrid_OnCellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
+        {
+            var vw = (MainViewModel)DataContext;
+            vw.EditMode.Execute(e);
+        }
+
+        private void DeleteWholePerson(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Delete) return;
+            var vm = (MainViewModel)DataContext;
+
+            var dg = (DataGrid)sender;
+            vm.DeletePersonCommand.Execute((Person)dg.SelectedItem);
+        }
+
+        private void DatePicker_OnCalendarClosed(object sender, RoutedEventArgs e)
+        {
+            var vw = (MainViewModel)DataContext;
+            vw.DateChanged.Execute(sender);
         }
     }
 }
