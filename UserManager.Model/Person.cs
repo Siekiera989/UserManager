@@ -16,7 +16,6 @@ namespace UserManager.Model
         [XmlElement(nameof(PhoneNumber))] public List<PhoneNumber> PhoneNumbers { get; set; }
         [XmlElement(nameof(AdressesList))] public List<Adress> AdressesList { get; set; }
         [XmlIgnore] public bool IsEdited { get; set; }
-        [XmlIgnore] public bool IsNew { get; set; }
 
         public Person()
         {
